@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Test Coverage Heatmap</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Main view ─────────────────────────────────────────────────────── -->
+    <div id="mainView">
+
+      <header>
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="2" width="8" height="8" rx="1.5" fill="#ef4444"/>
+          <rect x="14" y="2" width="8" height="8" rx="1.5" fill="#f97316"/>
+          <rect x="2" y="14" width="8" height="8" rx="1.5" fill="#22c55e"/>
+          <rect x="14" y="14" width="8" height="8" rx="1.5" fill="#3b82f6"/>
+        </svg>
+        <span class="logo-text">Coverage Heatmap</span>
+        <div id="statusPill" class="status-pill idle">Idle</div>
+      </header>
+
+      <div id="coverageCard" class="coverage-card hidden">
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 42 42">
+            <circle cx="21" cy="21" r="17" fill="none" stroke="#1e293b" stroke-width="4"/>
+            <circle id="ringArc" cx="21" cy="21" r="17" fill="none"
+                    stroke="#22c55e" stroke-width="4"
+                    stroke-dasharray="0 106.81"
+                    stroke-dashoffset="26.7"
+                    stroke-linecap="round"/>
+          </svg>
+          <span id="pctLabel" class="pct-label">0%</span>
+        </div>
+        <div class="coverage-meta">
+          <p class="coverage-title">UI Coverage</p>
+          <p id="coverageDetail" class="coverage-detail">— / — elements</p>
+          <p id="sessionUrl" class="session-url"></p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="recordBtn" class="btn btn-record">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="currentColor"/></svg>
+          Start Recording
+        </button>
+        <button id="heatmapBtn" class="btn btn-heat" disabled>
+          <svg viewBox="0 0 16 16"><path d="M8 2C5.8 4 4 6 4 8.5a4 4 0 0 0 8 0C12 6 10.2 4 8 2Z" fill="currentColor"/></svg>
+          Show Heatmap
+        </button>
+      </div>
+
+      <div id="modeRow" class="mode-row hidden">
+        <span class="mode-label">Mode</span>
+        <div class="mode-toggle">
+          <button class="mode-btn active" data-mode="coverage">Coverage</button>
+          <button class="mode-btn" data-mode="frequency">Frequency</button>
+        </div>
+      </div>
+
+      <div id="legend" class="legend hidden">
+        <div id="legendCoverage" class="legend-group">
+          <span class="legend-dot" style="background:#22c55e"></span><span>Tested</span>
+          <span class="legend-dot" style="background:#ef4444;margin-left:10px"></span><span>Untested</span>
+        </div>
+        <div id="legendFrequency" class="legend-group hidden">
+          <span class="legend-swatch freq-low"></span><span>Rare</span>
+          <span class="legend-swatch freq-mid"></span><span>Medium</span>
+          <span class="legend-swatch freq-high"></span><span>Heavy</span>
+        </div>
+      </div>
+
+      <div class="sessions-section">
+        <div class="section-header">
+          <span>Sessions</span>
+          <button id="clearAllBtn" class="link-btn danger">Clear all</button>
+        </div>
+        <div id="sessionList" class="session-list">
+          <p class="empty-msg">No sessions yet. Start recording to begin.</p>
+        </div>
+      </div>
+
+      <div id="exportRow" class="export-row hidden">
+        <button id="exportJsonBtn" class="link-btn">Export JSON</button>
+        <span class="sep">·</span>
+        <button id="exportHtmlBtn" class="link-btn">Export Report</button>
+      </div>
+
+    </div><!-- /#mainView -->
+
+    <!-- ── Session detail view ────────────────────────────────────────────── -->
+    <div id="sessionDetail" class="hidden">
+
+      <div class="detail-header">
+        <button id="backBtn" class="back-btn">
+          <svg viewBox="0 0 16 16" fill="none">
+            <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Sessions
+        </button>
+        <span class="detail-title">Session Details</span>
+      </div>
+
+      <!-- Coverage ring + metadata -->
+      <div class="detail-stats">
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 42 42">
+            <circle cx="21" cy="21" r="17" fill="none" stroke="#1e293b" stroke-width="4"/>
+            <circle id="detailRingArc" cx="21" cy="21" r="17" fill="none"
+                    stroke="#22c55e" stroke-width="4"
+                    stroke-dasharray="0 106.81"
+                    stroke-dashoffset="26.7"
+                    stroke-linecap="round"/>
+          </svg>
+          <span id="detailPct" class="pct-label">0%</span>
+        </div>
+        <div class="coverage-meta">
+          <p id="detailCounts" class="coverage-title">— / — elements</p>
+          <p id="detailUrlText" class="session-url"></p>
+          <p id="detailDate" class="coverage-detail"></p>
+        </div>
+      </div>
+
+      <!-- Load heatmap for this session -->
+      <div class="detail-actions">
+        <button id="viewHeatmapBtn" class="btn btn-heat" style="flex:1">
+          <svg viewBox="0 0 16 16"><path d="M8 2C5.8 4 4 6 4 8.5a4 4 0 0 0 8 0C12 6 10.2 4 8 2Z" fill="currentColor"/></svg>
+          View Heatmap on Page
+        </button>
+      </div>
+
+      <!-- Element list with filter -->
+      <div class="detail-el-section">
+        <div class="detail-el-header">
+          <span class="detail-el-label">Elements</span>
+          <div class="filter-tabs">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="untested">Untested</button>
+            <button class="filter-btn" data-filter="tested">Tested</button>
+          </div>
+        </div>
+        <div id="elementList" class="el-list"></div>
+      </div>
+
+    </div><!-- /#sessionDetail -->
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
